@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediLab & Drug Store Information System (MLDIS)</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+</head>
+<body>
+
+<!-- ========================================================= -->
+<!-- 1. FULL-PAGE ROLE-BASED LOGIN / SWITCH SCREEN              -->
+<!-- ========================================================= -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="auth-logo"><i class="fas fa-heart-pulse"></i></div>
+      <h2>MediLab &amp; Drug Store</h2>
+      <p class="subtitle">Information System Portal</p>
+    </div>
+
+    <div class="quick-role-picker">
+      <span class="picker-label">Click Quick-Login as:</span>
+      <div class="role-pills">
+        <button type="button" class="role-pill" onclick="quickFill('admin', 'admin123', 'admin')"><i class="fas fa-user-shield"></i> Admin</button>
+        <button type="button" class="role-pill" onclick="quickFill('doctor_shristi', 'doc123', 'doctor')"><i class="fas fa-stethoscope"></i> Doctor</button>
+        <button type="button" class="role-pill" onclick="quickFill('tech_raushni', 'lab123', 'lab')"><i class="fas fa-microscope"></i> Lab Tech</button>
+        <button type="button" class="role-pill" onclick="quickFill('pharma_sneha', 'pharma123', 'pharmacist')"><i class="fas fa-pills"></i> Pharmacist</button>
+        <button type="button" class="role-pill" onclick="quickFill('patient_riya', 'pat123', 'patient')"><i class="fas fa-user"></i> Patient</button>
+      </div>
+    </div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)" class="auth-form">
+      <div class="form-group">
+        <label><i class="fas fa-user-circle"></i> Username</label>
+        <input type="text" id="loginUsername" placeholder="e.g. pharma_sneha" required />
+      </div>
+
+      <div class="form-group">
+        <label><i class="fas fa-lock"></i> Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter password" required />
+      </div>
+
+      <div class="form-group">
+        <label><i class="fas fa-id-badge"></i> Assigned Role</label>
+        <select id="loginRole" required>
+          <option value="admin">Administrator (Shristi Srivastava)</option>
+          <option value="doctor">Doctor (Dr. Shristi Singh)</option>
+          <option value="lab">Lab Technician (Raushni Kumari)</option>
+          <option value="pharmacist" selected>Pharmacist (Sneha Kumari)</option>
+          <option value="patient">Patient (Self-Service Portal)</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-arrow-right-to-bracket"></i> Sign In to MediLab</button>
+      <button type="button" class="btn btn-secondary btn-block" style="margin-top: 0.5rem;" onclick="openPatientRegisterFromAuth()"><i class="fas fa-user-plus"></i> New Patient? Register Here</button>
+    </form>
+
+    <div class="auth-hint">
+      <strong>Demo Credentials (or create your own):</strong><br>
+      • Admin: <code>admin</code> / <code>admin123</code> | • Doctor: <code>doctor_shristi</code> / <code>doc123</code><br>
+      • Lab Tech: <code>tech_raushni</code> / <code>lab123</code> | • Pharmacist: <code>pharma_sneha</code> / <code>pharma123</code><br>
+      • Patient: <code>patient_riya</code> / <code>pat123</code>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- 2. MAIN APPLICATION INTERFACE (Shown upon Auth)           -->
+<!-- ========================================================= -->
+<div id="appContainer" class="app-layout" style="display: none;">
+
+  <!-- SIDEBAR NAV -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <i class="fas fa-heart-pulse"></i>
+        <span>MediLab IS</span>
+      </div>
+      <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+    </div>
+
+    <!-- Active User Card in Sidebar -->
+    <div class="sidebar-user-panel">
+      <div class="user-avatar" id="sideAvatar"><i class="fas fa-user-circle"></i></div>
+      <div class="user-info">
+        <strong id="sideUserName">Sneha Kumari</strong>
+        <span class="user-role-badge" id="sideRoleBadge">Pharmacist</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+        <!-- Common / Role Views -->
+        <li><a href="#" class="nav-link active" data-page="dashboard"><i class="fas fa-th-large"></i><span>Dashboard</span></a></li>
+        <li class="role-menu-item" data-role="patient,doctor,admin"><a href="#" class="nav-link" data-page="myportal"><i class="fas fa-hospital-user"></i><span>Patient Portal</span></a></li>
+        <li class="role-menu-item" data-role="patient,doctor,admin,lab,pharmacist"><a href="#" class="nav-link" data-page="patients"><i class="fas fa-user-injured"></i><span>Manage Patients</span></a></li>
+        <li class="role-menu-item" data-role="doctor,admin"><a href="#" class="nav-link" data-page="doctor"><i class="fas fa-stethoscope"></i><span>Doctor Desk (Rx)</span></a></li>
+        <li class="role-menu-item" data-role="lab,doctor,admin,patient"><a href="#" class="nav-link" data-page="lab"><i class="fas fa-vials"></i><span>Lab Tests &amp; Reports</span></a></li>
+        <li class="role-menu-item" data-role="pharmacist,doctor,admin"><a href="#" class="nav-link" data-page="pharmacy"><i class="fas fa-pills"></i><span>Pharmacy &amp; Stock</span></a></li>
+        <li class="role-menu-item" data-role="admin,pharmacist,patient"><a href="#" class="nav-link" data-page="billing"><i class="fas fa-file-invoice-dollar"></i><span>Billing &amp; Payments</span></a></li>
+        <li class="role-menu-item" data-role="admin"><a href="#" class="nav-link" data-page="admin"><i class="fas fa-users-cog"></i><span>Admin Accounts &amp; Config</span></a></li>
+        
+        <!-- Academic Software Engineering References -->
+        <li class="nav-divider"><span>SYSTEM ARCHITECTURE &amp; DOCS</span></li>
+        <li><a href="#" class="nav-link" data-page="dfd"><i class="fas fa-project-diagram"></i><span>DFD Diagrams (L0-L2)</span></a></li>
+        <li><a href="#" class="nav-link" data-page="usecase"><i class="fas fa-diagram-project"></i><span>UML Use Case</span></a></li>
+        <li><a href="#" class="nav-link" data-page="classdiagram"><i class="fas fa-sitemap"></i><span>UML Class Diagram</span></a></li>
+        <li><a href="#" class="nav-link" data-page="project"><i class="fas fa-tasks"></i><span>MS Project Gantt</span></a></li>
+        <li><a href="#" class="nav-link" data-page="testcases"><i class="fas fa-vial-circle-check"></i><span>Black Box &amp; CFG Test</span></a></li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn btn-outline-danger btn-block" onclick="handleLogout()"><i class="fas fa-right-from-bracket"></i> Switch Role / Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN VIEW AREA -->
+  <div class="main-wrapper" id="mainWrapper">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle-mobile" id="sidebarToggleMobile"><i class="fas fa-bars"></i></button>
+        <h1 class="page-title" id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <div class="live-clock" id="liveClock"></div>
+        <div class="user-badge-header">
+          <span class="role-tag" id="topRoleBadge">Pharmacist</span>
+          <span class="user-display-name" id="topUserName">Sneha Kumari</span>
+          <button class="btn btn-sm btn-secondary" onclick="handleLogout()" title="Change User"><i class="fas fa-arrow-right-from-bracket"></i></button>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT PAGES -->
+    <main class="page-container" id="pageContainer">
+
+      <!-- ============================================== -->
+      <!-- PAGE 1: DASHBOARD                              -->
+      <!-- ============================================== -->
+      <section class="page active" id="page-dashboard">
+        <div class="banner">
+          <div class="banner-text">
+            <h2>Welcome, <span id="bannerUserGreeting">Sneha Kumari</span>!</h2>
+            <p>MediLab &amp; Drug Store Information System is actively running. You are authenticated as <strong id="bannerRoleDesc">Pharmacist</strong>.</p>
+          </div>
+          <div class="banner-icon"><i class="fas fa-hospital-user"></i></div>
+        </div>
+
+        <!-- Role Notification Bar -->
+        <div class="role-notice-card" id="roleNoticeCard">
+          <i class="fas fa-info-circle"></i>
+          <div>
+            <strong id="roleNoticeTitle">Role Functions Available:</strong>
+            <p id="roleNoticeText">Dispense medicines, verify prescriptions, manage medicine inventory, and calculate dues.</p>
+          </div>
+        </div>
+
+        <!-- KPI Metrics -->
+        <div class="kpi-grid">
+          <div class="kpi-card blue">
+            <i class="fas fa-user-injured"></i>
+            <div>
+              <span class="kpi-val" id="kpiPatients">0</span>
+              <span class="kpi-label">Registered Patients</span>
+            </div>
+          </div>
+          <div class="kpi-card green">
+            <i class="fas fa-vials"></i>
+            <div>
+              <span class="kpi-val" id="kpiTests">0</span>
+              <span class="kpi-label">Diagnostic Tests</span>
+            </div>
+          </div>
+          <div class="kpi-card orange">
+            <i class="fas fa-prescription-bottle-medical"></i>
+            <div>
+              <span class="kpi-val" id="kpiPrescriptions">0</span>
+              <span class="kpi-label">Prescriptions Active</span>
+            </div>
+          </div>
+          <div class="kpi-card purple">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <div>
+              <span class="kpi-val" id="kpiBills">0</span>
+              <span class="kpi-label">Bills &amp; Invoices</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Architecture Overview -->
+        <div class="two-col-grid">
+          <div class="card">
+            <h3><i class="fas fa-network-wired"></i> Core System Modules</h3>
+            <ul class="feature-checklist">
+              <li><i class="fas fa-check-circle text-green"></i> <strong>0.1 User Management &amp; Security:</strong> Role-based credentials &amp; login records.</li>
+              <li><i class="fas fa-check-circle text-green"></i> <strong>0.2 Patient Management:</strong> Profile, medical observations, and history.</li>
+              <li><i class="fas fa-check-circle text-green"></i> <strong>0.3 Lab Test Booking:</strong> Schedule updates, specimen reception, and tracking.</li>
+              <li><i class="fas fa-check-circle text-green"></i> <strong>0.4 Report Generation:</strong> Parameter entries, reference ranges, doctor verification.</li>
+              <li><i class="fas fa-check-circle text-green"></i> <strong>0.5 Pharmacy Dispensing:</strong> Prescription validation, stock safety checks.</li>
+              <li><i class="fas fa-check-circle text-green"></i> <strong>0.6 Billing &amp; Invoicing:</strong> Tax (GST), discounts, and dues calculation.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3><i class="fas fa-users-viewfinder"></i> Team &amp; Assignment Roles</h3>
+            <div class="team-grid">
+              <div class="team-card">
+                <i class="fas fa-user-gear text-blue"></i>
+                <strong>Shristi Srivastava</strong>
+                <span class="role-tag admin">Administrator</span>
+                <small>11500124046</small>
+              </div>
+              <div class="team-card">
+                <i class="fas fa-user-doctor text-green"></i>
+                <strong>Shristi Singh</strong>
+                <span class="role-tag doctor">Doctor</span>
+                <small>11500124045</small>
+              </div>
+              <div class="team-card">
+                <i class="fas fa-flask-vial text-orange"></i>
+                <strong>Raushni Kumari</strong>
+                <span class="role-tag labtech">Lab Technician</span>
+                <small>11500124048</small>
+              </div>
+              <div class="team-card">
+                <i class="fas fa-prescription-bottle-medical text-purple"></i>
+                <strong>Sneha Kumari</strong>
+                <span class="role-tag pharma">Pharmacist</span>
+                <small>11500124042</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- PAGE 2: PATIENT SELF-SERVICE PORTAL            -->
+      <!-- ============================================== -->
+      <section class="page" id="page-myportal">
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-hospital-user"></i> Patient Self-Service Portal</h3>
+            <span class="badge ok">Patient Direct View</span>
+          </div>
+          <p>Lookup any patient's real-time electronic records, pending lab tests, doctor prescriptions, and unpaid bills.</p>
+          
+          <div class="portal-lookup-bar">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+              <label><strong>Select Patient Record:</strong></label>
+              <button class="btn btn-sm btn-success" onclick="openModal('patientModal')"><i class="fas fa-user-plus"></i> + Register New Patient</button>
+            </div>
+            <div class="lookup-input-group" style="margin-top:0.5rem;">
+              <select id="portalPatientSelect" onchange="loadPatientPortalData(this.value)">
+                <option value="P1001">P1001 - Riya Sharma (28y, Female)</option>
+                <option value="P1002">P1002 - Arjun Mehta (45y, Male)</option>
+                <option value="P1003">P1003 - Priya Das (33y, Female)</option>
+                <option value="P1004">P1004 - Rohit Verma (60y, Male)</option>
+              </select>
+              <button class="btn btn-primary" onclick="loadPatientPortalData(document.getElementById('portalPatientSelect').value)"><i class="fas fa-arrows-rotate"></i> Refresh Records</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="portal-results-grid">
+          <!-- Patient Summary Card -->
+          <div class="card patient-profile-card">
+            <h3><i class="fas fa-id-card"></i> Patient Profile</h3>
+            <div id="portalProfileInfo">Loading...</div>
+          </div>
+
+          <!-- Active Prescriptions -->
+          <div class="card">
+            <h3><i class="fas fa-pills"></i> My Prescriptions</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Rx ID</th><th>Medicine</th><th>Dosage</th><th>Duration</th><th>Status</th></tr>
+                </thead>
+                <tbody id="portalRxTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Lab Tests & Reports -->
+          <div class="card">
+            <h3><i class="fas fa-vials"></i> My Lab Tests</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Schedule ID</th><th>Test Name</th><th>Date</th><th>Result</th><th>Status</th></tr>
+                </thead>
+                <tbody id="portalLabTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Billing & Receipts -->
+          <div class="card">
+            <h3><i class="fas fa-receipt"></i> Invoices &amp; Charges</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Bill ID</th><th>Service</th><th>Amount</th><th>Status</th><th>Action</th></tr>
+                </thead>
+                <tbody id="portalBillTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- PAGE 3: PATIENT MANAGEMENT (Registration)      -->
+      <!-- ============================================== -->
+      <section class="page" id="page-patients">
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-user-injured"></i> Patient Directory &amp; Registration</h3>
+            <button class="btn btn-primary" onclick="openModal('patientModal')"><i class="fas fa-user-plus"></i> Register Patient</button>
+          </div>
+          <div class="search-bar">
+            <input type="text" id="patientSearch" placeholder="Search by patient ID, name, or phone..." oninput="filterTable('patientTable', this.value)" />
+            <i class="fas fa-search"></i>
+          </div>
+          <div class="table-wrap">
+            <table id="patientTable">
+              <thead>
+                <tr>
+                  <th>Patient ID</th><th>Full Name</th><th>Age</th><th>Gender</th><th>Contact</th><th>Address</th><th>Previous History</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="patientBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- PAGE 4: DOCTOR DESK (Diagnosis & Rx)           -->
+      <!-- ============================================== -->
+      <section class="page" id="page-doctor">
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-stethoscope"></i> Doctor Consultation Desk</h3>
+            <span class="role-tag doctor">Dr. Shristi Singh</span>
+          </div>
+          <p>Examine assigned patients, record symptoms &amp; clinical diagnosis, order laboratory diagnostics, and prescribe medications.</p>
+
+          <div class="consultation-box">
+            <h4><i class="fas fa-file-waveform"></i> New Clinical Consultation</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Select Patient</label>
+                <select id="docPatientSelect" onchange="populateDocPatientInfo(this.value)">
+                  <!-- Filled via JS -->
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Patient Details</label>
+                <input type="text" id="docPatientDetails" readonly placeholder="Patient info..." />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Symptoms / Observations</label>
+                <input type="text" id="docSymptoms" placeholder="e.g. High fever, fatigue, persistent cough (3 days)" />
+              </div>
+              <div class="form-group">
+                <label>Diagnosis &amp; Treatment Plan</label>
+                <input type="text" id="docDiagnosis" placeholder="e.g. Acute upper respiratory infection" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Order Lab Test (Optional)</label>
+                <select id="docLabOrder">
+                  <option value="">-- No Lab Test Required --</option>
+                  <option value="CBC (Complete Blood Count)">CBC (Complete Blood Count)</option>
+                  <option value="LFT (Liver Function Test)">LFT (Liver Function Test)</option>
+                  <option value="Blood Sugar Fasting">Blood Sugar Fasting</option>
+                  <option value="Lipid Profile">Lipid Profile</option>
+                  <option value="Thyroid Profile (T3, T4, TSH)">Thyroid Profile (T3, T4, TSH)</option>
+                  <option value="Urine Routine Examination">Urine Routine Examination</option>
+                  <option value="Chest X-Ray">Chest X-Ray</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Prescribe Medicine</label>
+                <select id="docMedicineSelect">
+                  <option value="Amoxicillin 500 mg">Amoxicillin 500 mg (Antibiotic)</option>
+                  <option value="Paracetamol 500 mg">Paracetamol 500 mg (Antipyretic)</option>
+                  <option value="Metformin 500 mg">Metformin 500 mg (Antidiabetic)</option>
+                  <option value="Atorvastatin 10 mg">Atorvastatin 10 mg (Lipid Lowering)</option>
+                  <option value="Pantoprazole 40 mg">Pantoprazole 40 mg (Antacid)</option>
+                  <option value="Azithromycin 500 mg">Azithromycin 500 mg (Antibiotic)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Dosage</label>
+                <input type="text" id="docDosage" value="1-0-1 (After Food)" />
+              </div>
+              <div class="form-group">
+                <label>Duration</label>
+                <input type="text" id="docDuration" value="5 days" />
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="submitDoctorConsultation()"><i class="fas fa-check"></i> Save Consultation, Prescribe &amp; Order Test</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- PAGE 5: LAB TESTS & REPORTS (Technician)       -->
+      <!-- ============================================== -->
+      <section class="page" id="page-lab">
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-vials"></i> Laboratory Testing &amp; Diagnostic Reports</h3>
+            <button class="btn btn-primary" onclick="openModal('labModal')"><i class="fas fa-plus"></i> Book New Test</button>
+          </div>
+          <div class="search-bar">
+            <input type="text" id="labSearch" placeholder="Search tests by ID, Patient, or Test name..." oninput="filterTable('labTable', this.value)" />
+            <i class="fas fa-search"></i>
+          </div>
+          <div class="table-wrap">
+            <table id="labTable">
+              <thead>
+                <tr>
+                  <th>Schedule ID</th><th>Patient ID</th><th>Test Name</th><th>Date</th><th>Technician</th><th>Result Values</th><th>Reference Range</th><th>Status</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="labBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Sample Tracking & Reagents Box -->
+        <div class="two-col-grid">
+          <div class="card">
+            <h3><i class="fas fa-barcode"></i> Sample Registration &amp; Specimen Tracking</h3>
+            <div class="sample-tracker-box">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Sample Barcode / Specimen ID</label>
+                  <input type="text" id="sampleBarcode" placeholder="e.g. SMP-9921" />
+                </div>
+                <div class="form-group">
+                  <label>Sample Type</label>
+                  <select id="sampleType">
+                    <option>EDTA Whole Blood</option>
+                    <option>Serum (Plain Vial)</option>
+                    <option>Fluoride Plasma</option>
+                    <option>Midstream Urine</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-success" onclick="trackSample()"><i class="fas fa-tag"></i> Register &amp; Log Specimen</button>
+              <div id="sampleStatusMsg" style="margin-top: 10px; font-weight: 600;"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3><i class="fas fa-box-archive"></i> Laboratory Reagents &amp; Supplies</h3>
+            <div class="table-wrap">
+              <table class="dict-table">
+                <thead><tr><th>Reagent</th><th>Lot No.</th><th>Stock Qty</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td>CBC Lyse Reagent</td><td>L-9821</td><td>14 Vials</td><td><span class="badge ok">Adequate</span></td></tr>
+                  <tr><td>Glucose Oxidase Kit</td><td>G-4412</td><td>8 Kits</td><td><span class="badge ok">Adequate</span></td></tr>
+                  <tr><td>SGPT/SGOT Kinetic Reagent</td><td>S-3001</td><td>2 Kits</td><td><span class="badge low">Low Supply</span></td></tr>
+                  <tr><td>Urine Test Strips 10G</td><td>U-1288</td><td>30 Strips</td><td><span class="badge ok">Adequate</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- PAGE 6: PHARMACY (Dispensing & Stock)          -->
+      <!-- ============================================== -->
+      <section class="page" id="page-pharmacy">
+        <!-- Interactive Black Box Dispense Screen (Assignment Specification) -->
+        <div class="card" style="border: 2px solid var(--purple);">
+          <div class="card-header">
+            <h3><i class="fas fa-mortar-pestle"></i> Live Dispensing Screen (Black Box Test Tested)</h3>
+            <span class="role-tag pharma">Pharmacist: Sneha Kumari</span>
+          </div>
+          <p>Enter the <strong>Patient ID</strong> and <strong>Prescription ID</strong> to validate and dispense drugs against live inventory.</p>
+
+          <div class="dispensing-console">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Patient ID</label>
+                <input type="text" id="dispPatientID" placeholder="e.g. P1001" value="P1001" />
+              </div>
+              <div class="form-group">
+                <label>Prescription ID</label>
+                <input type="text" id="dispPrescriptionID" placeholder="e.g. PR101" value="PR101" />
+              </div>
+              <div class="form-group" style="align-self: flex-end;">
+                <button type="button" class="btn btn-primary" onclick="lookupPrescription()"><i class="fas fa-magnifying-glass"></i> Validate Prescription</button>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Prescribed Medicine (Auto-filled on Lookup or Enter Manually)</label>
+                <input type="text" id="dispMedicine" placeholder="e.g. Amoxicillin 500 mg" value="Amoxicillin 500 mg" />
+              </div>
+              <div class="form-group">
+                <label>Prescribed Quantity (Auto-filled or Enter Manually)</label>
+                <input type="number" id="dispPrescribedQty" placeholder="e.g. 15" value="15" />
+              </div>
+              <div class="form-group">
+                <label>Quantity to Dispense (Input)</label>
+                <input type="number" id="dispQuantityInput" placeholder="e.g. 15" value="15" />
+              </div>
+            </div>
+
+            <div class="dispense-actions">
+              <button type="button" class="btn btn-success" onclick="executeDispense()"><i class="fas fa-pills"></i> Dispense Medicine</button>
+              <span id="dispenseConsoleOutput" class="console-output">Ready for input.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prescriptions List -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-list-check"></i> Prescription Log</h3>
+            <button class="btn btn-primary" onclick="openModal('rxModal')"><i class="fas fa-plus"></i> Add Prescription Manual</button>
+          </div>
+          <div class="table-wrap">
+            <table id="rxTable">
+              <thead>
+                <tr>
+                  <th>Prescription ID</th><th>Patient ID</th><th>Doctor</th><th>Medicine</th><th>Dosage</th><th>Duration</th><th>Status</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rxBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Medicine Stock Table -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-boxes-stacked"></i> Drug Store Inventory Stock</h3>
+            <button class="btn btn-secondary" onclick="openModal('stockModal')"><i class="fas fa-plus"></i> Add New Medicine</button>
+          </div>
+          <div class="table-wrap">
+            <table id="stockTable">
+              <thead>
+                <tr><th>Medicine ID</th><th>Medicine Name</th><th>Available Stock</th><th>Reorder Level</th><th>Unit Price (₹)</th><th>Stock Status</th><th>Action</th></tr>
+              </thead>
+              <tbody id="stockBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- PAGE 7: BILLING & INVOICING                    -->
+      <!-- ============================================== -->
+      <section class="page" id="page-billing">
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-file-invoice-dollar"></i> Billing &amp; Invoices</h3>
+            <button class="btn btn-primary" onclick="openModal('billModal')"><i class="fas fa-plus"></i> Generate Bill</button>
+          </div>
+          <div class="search-bar">
+            <input type="text" id="billSearch" placeholder="Search bills by ID or Patient..." oninput="filterTable('billTable', this.value)" />
+            <i class="fas fa-search"></i>
+          </div>
+          <div class="table-wrap">
+            <table id="billTable">
+              <thead>
+                <tr>
+                  <th>Bill ID</th><th>Patient ID</th><th>Service Type</th><th>Subtotal (₹)</th><th>Tax</th><th>Discount</th><th>Total Due (₹)</th><th>Bill Date</th><th>Status</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="billBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Level-2 DFD Flow Preview -->
+        <div class="card">
+          <h3><i class="fas fa-calculator"></i> Level-2 DFD Billing Subprocess (0.6)</h3>
+          <div class="dfd-diagram">
+            <div class="dfd-entity">Patient Request</div>
+            <div class="dfd-arrow"><i class="fas fa-arrow-right"></i> Lab / Drug Charges</div>
+            <div class="dfd-process">0.6.1<br/>Collect Charges</div>
+            <div class="dfd-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="dfd-process">0.6.2<br/>Calculate Total Amount</div>
+            <div class="dfd-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="dfd-process">0.6.3<br/>Generate Bill</div>
+            <div class="dfd-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="dfd-process">0.6.4<br/>Store Bill</div>
+            <div class="dfd-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="dfd-store">Billing File</div>
+            <div class="dfd-arrow"><i class="fas fa-arrow-right"></i> Bill / dues</div>
+            <div class="dfd-entity">Patient Payment</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- PAGE 8: ADMINISTRATOR CONTROL PANEL            -->
+      <!-- ============================================== -->
+      <section class="page" id="page-admin">
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-user-shield"></i> Hospital Staff Accounts &amp; Access Control</h3>
+            <button class="btn btn-primary" onclick="openModal('userModal')"><i class="fas fa-user-plus"></i> Add New Staff</button>
+          </div>
+          <div class="table-wrap">
+            <table id="staffTable">
+              <thead>
+                <tr><th>User ID</th><th>Staff Name</th><th>Username</th><th>Assigned Role</th><th>Status</th><th>Action</th></tr>
+              </thead>
+              <tbody id="staffBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="two-col-grid">
+          <div class="card">
+            <h3><i class="fas fa-calendar-days"></i> Doctor Schedule &amp; Availability</h3>
+            <div class="table-wrap">
+              <table class="dict-table">
+                <thead><tr><th>Doctor</th><th>Department</th><th>Days</th><th>Timings</th></tr></thead>
+                <tbody>
+                  <tr><td>Dr. Shristi Singh</td><td>General Medicine</td><td>Mon - Sat</td><td>09:00 AM - 02:00 PM</td></tr>
+                  <tr><td>Dr. A. K. Sen</td><td>Pathology</td><td>Mon - Fri</td><td>10:00 AM - 04:00 PM</td></tr>
+                  <tr><td>Dr. P. Roy</td><td>Radiology</td><td>Tue, Thu, Sat</td><td>02:00 PM - 06:00 PM</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3><i class="fas fa-percent"></i> Tax &amp; Discount Configuration</h3>
+            <div class="form-group">
+              <label>Default GST on Lab Diagnostics (%)</label>
+              <input type="number" id="cfgLabTax" value="18" />
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+              <label>Default GST on Pharmacy Medicines (%)</label>
+              <input type="number" id="cfgDrugTax" value="5" />
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+              <label>Senior Citizen Discount (%)</label>
+              <input type="number" id="cfgDiscount" value="10" />
+            </div>
+            <button class="btn btn-success" style="margin-top: 12px;" onclick="saveTaxConfig()"><i class="fas fa-floppy-disk"></i> Save Rate Parameters</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- PAGE 9: DFD DIAGRAMS (L0, L1, L2)              -->
+      <!-- ============================================== -->
+      <section class="page" id="page-dfd">
+        <div class="card">
+          <h3><i class="fas fa-project-diagram"></i> Data Flow Diagrams (DFDs)</h3>
+          <p>Data Flow Diagrams visualize system boundaries, external entities, process transformations, and data stores.</p>
+        </div>
+
+        <!-- DFD Level 0 -->
+        <div class="card">
+          <h3><i class="fas fa-circle-nodes"></i> Context Level Diagram (DFD Level 0)</h3>
+          <div class="dfd-level0">
+            <div class="dfd-ext-entity"><i class="fas fa-user-injured"></i><br/>Patient</div>
+            <div class="dfd-arrows-center">
+              <div class="arrow-row"><span class="arrow-label">Patient Details, Test Request, Prescription</span> <i class="fas fa-arrow-right"></i></div>
+              <div class="central-process">
+                <div class="process-box-big">
+                  <strong>0</strong><br/>MediLab &amp; Drug Store<br/>Information System
+                </div>
+              </div>
+              <div class="arrow-row"><i class="fas fa-arrow-left"></i> <span class="arrow-label">Lab Reports, Medicines, Bills / Receipts</span></div>
+            </div>
+            <div class="dfd-ext-entities-right">
+              <div class="dfd-ext-entity"><i class="fas fa-stethoscope"></i><br/>Doctor</div>
+              <div class="dfd-ext-entity"><i class="fas fa-microscope"></i><br/>Lab Technician</div>
+              <div class="dfd-ext-entity"><i class="fas fa-mortar-pestle"></i><br/>Pharmacist</div>
+              <div class="dfd-ext-entity"><i class="fas fa-user-shield"></i><br/>Administrator</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DFD Level 1 -->
+        <div class="card">
+          <h3><i class="fas fa-layer-group"></i> 1st Level DFD (Processes 0.1 – 0.7)</h3>
+          <div class="dfd-level1-grid">
+            <div class="dfd-l1-box blue">
+              <strong>0.1</strong> Login &amp; User Management
+              <div class="dfd-l1-desc">External: Administrator / Staff &bull; Data Store: User File</div>
+            </div>
+            <div class="dfd-l1-box green">
+              <strong>0.2</strong> Manage Patient
+              <div class="dfd-l1-desc">External: Doctor, Patient &bull; Data Store: Patient File</div>
+            </div>
+            <div class="dfd-l1-box orange">
+              <strong>0.3</strong> Lab Test Booking
+              <div class="dfd-l1-desc">External: Doctor, Lab Technician &bull; Data Store: Test Booking File</div>
+            </div>
+            <div class="dfd-l1-box teal">
+              <strong>0.4</strong> Report Generation
+              <div class="dfd-l1-desc">External: Lab Tech, Doctor &bull; Data Store: Report File</div>
+            </div>
+            <div class="dfd-l1-box purple">
+              <strong>0.5</strong> Order / Dispense Medicine
+              <div class="dfd-l1-desc">External: Doctor, Pharmacist &bull; Data Store: Drug Inventory File</div>
+            </div>
+            <div class="dfd-l1-box red">
+              <strong>0.6</strong> Generate Bills
+              <div class="dfd-l1-desc">Inputs: Lab Charges, Drug Charges &bull; Data Store: Billing File</div>
+            </div>
+            <div class="dfd-l1-box blue">
+              <strong>0.7</strong> Making Payments
+              <div class="dfd-l1-desc">External: Patient, Payment Gateway &bull; Output: Payment Receipt</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- PAGE 10: USE CASE DIAGRAM                      -->
+      <!-- ============================================== -->
+      <section class="page" id="page-usecase">
+        <div class="card">
+          <h3><i class="fas fa-diagram-project"></i> UML Use Case Diagram &amp; Actor Mapping</h3>
+          <div class="usecase-diagram">
+            <div class="uc-actors">
+              <div class="uc-actor admin"><i class="fas fa-user-shield"></i><br/>Administrator</div>
+              <div class="uc-actor doctor"><i class="fas fa-stethoscope"></i><br/>Doctor</div>
+              <div class="uc-actor lab"><i class="fas fa-microscope"></i><br/>Lab Tech</div>
+              <div class="uc-actor pharma"><i class="fas fa-mortar-pestle"></i><br/>Pharmacist</div>
+            </div>
+            <div class="uc-system">
+              <div class="uc-system-title">MediLab &amp; Drug Store Information System Boundary</div>
+              <div class="uc-cases">
+                <div class="uc-case"><i class="fas fa-lock"></i> Login / Registration</div>
+                <div class="uc-case"><i class="fas fa-calendar-check"></i> Schedule Appointments &lt;&lt;include&gt;&gt; Check Appointment</div>
+                <div class="uc-case"><i class="fas fa-prescription"></i> Create Prescription &lt;&lt;include&gt;&gt; View Patient Records</div>
+                <div class="uc-case"><i class="fas fa-vial"></i> Conduct Tests</div>
+                <div class="uc-case"><i class="fas fa-file-medical"></i> Generate Reports</div>
+                <div class="uc-case"><i class="fas fa-pills"></i> Dispense Medicines &lt;&lt;include&gt;&gt; View Prescription</div>
+                <div class="uc-case"><i class="fas fa-file-invoice-dollar"></i> Generate Bills</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- PAGE 11: CLASS DIAGRAM                         -->
+      <!-- ============================================== -->
+      <section class="page" id="page-classdiagram">
+        <div class="card">
+          <h3><i class="fas fa-sitemap"></i> Static Design — UML Class Diagram</h3>
+          <div class="class-diagram">
+            <div class="uml-class abstract-class">
+              <div class="uml-class-name">&laquo;abstract&raquo; User</div>
+              <div class="uml-class-attr">
+                - userId: int<br>- name: String<br>- username: String<br>- password: String<br>- role: String
+              </div>
+              <div class="uml-class-ops">+ login(): boolean<br>+ logout(): void</div>
+            </div>
+
+            <div class="uml-class doctor-class">
+              <div class="uml-class-name">Doctor (extends User)</div>
+              <div class="uml-class-attr">- specialization: String</div>
+              <div class="uml-class-ops">+ viewRecord()<br>+ recordDiagnosis()<br>+ prescribeTest()<br>+ prescribeMedicine()</div>
+            </div>
+
+            <div class="uml-class patient-class">
+              <div class="uml-class-name">Patient</div>
+              <div class="uml-class-attr">- patientId: int<br>- name: String<br>- age: int<br>- gender: String<br>- contact: String</div>
+              <div class="uml-class-ops">+ register(): void</div>
+            </div>
+
+            <div class="uml-class medrecord-class">
+              <div class="uml-class-name">MedicalRecord</div>
+              <div class="uml-class-attr">- recordId: int<br>- diagnosis: String<br>- treatment: String<br>- labTest: String<br>- testResult: String<br>- medicines: String</div>
+              <div class="uml-class-ops">+ update()<br>+ enterTestResult()</div>
+            </div>
+
+            <div class="uml-class bill-class">
+              <div class="uml-class-name">Bill</div>
+              <div class="uml-class-attr">- billId: int<br>- subtotal: double<br>- tax: double<br>- discount: double<br>- total: double</div>
+              <div class="uml-class-ops">+ calculateTotal(): double</div>
+            </div>
+          </div>
+
+          <div class="class-legend">
+            <h4>Relationships:</h4>
+            <div class="class-legend-grid">
+              <div class="rel-item"><span class="rel-line generalization"></span> <strong>Generalization:</strong> Doctor is a kind of User (Administrator, Lab Tech, Pharmacist also inherit User).</div>
+              <div class="rel-item"><span class="rel-line composition"></span> <strong>Composition:</strong> Patient has 1..* MedicalRecords (a record has no meaning without its patient).</div>
+              <div class="rel-item"><span class="rel-line association"></span> <strong>Association:</strong> Doctor updates MedicalRecord (1 to *); Patient pays Bills (1 to *).</div>
+              <div class="rel-item"><span class="rel-line dependency"></span> <strong>Dependency:</strong> Bill depends on MedicalRecord for tests and medicines billed.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- PAGE 12: MS PROJECT GANTT SCHEDULE             -->
+      <!-- ============================================== -->
+      <section class="page" id="page-project">
+        <div class="card">
+          <h3><i class="fas fa-tasks"></i> SDLC Project Schedule (MS Project)</h3>
+          <p>Project Duration: <strong>Fri 09-10-26 to Mon 15-03-27</strong></p>
+          <div class="gantt-wrap" id="ganttChart"></div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- PAGE 13: TEST CASES & CFG                      -->
+      <!-- ============================================== -->
+      <section class="page" id="page-testcases">
+        <div class="card">
+          <h3><i class="fas fa-vial-circle-check"></i> Black Box Test Cases (Dispense Medicines Screen)</h3>
+          <p>Author: <strong>Sneha Kumari</strong> | Roll: 11500124042</p>
+          <div class="table-wrap">
+            <table class="dict-table">
+              <thead><tr><th>Test #</th><th>Test Input</th><th>Expected Output</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>TC-01</td><td>Patient ID = P1001, Prescription ID = PR101</td><td>"Prescription found"</td><td><span class="badge pass">PASS</span></td></tr>
+                <tr><td>TC-02</td><td>Patient ID = P1001, Prescription ID = PR999</td><td>"Invalid prescription"</td><td><span class="badge pass">PASS</span></td></tr>
+                <tr><td>TC-03</td><td>Prescription = Amoxicillin 500 mg, Quantity = 15</td><td>"Medicine dispensed successfully"</td><td><span class="badge pass">PASS</span></td></tr>
+                <tr><td>TC-04</td><td>Prescription = Amoxicillin 500 mg, Quantity = 0</td><td>"Invalid quantity"</td><td><span class="badge pass">PASS</span></td></tr>
+                <tr><td>TC-05</td><td>Quantity = 20 when prescribed quantity = 15</td><td>"Quantity exceeds prescribed amount"</td><td><span class="badge pass">PASS</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3><i class="fas fa-code-branch"></i> Control Flow Graph &amp; Cyclomatic Complexity</h3>
+          <p>Formula: <code>V(G) = E - N + 2 = 11 - 9 + 2 = 4</code> (4 Independent execution paths)</p>
+          <div class="code-block">P1: 1 → 2 → 3 → 7 → 9 → 10
+P2: 1 → 2 → 3 → 4 → 5 → 7 → 8 → 10
+P3: 1 → 2 → 3 → 4 → 6 → 3 → 7 → 9 → 10
+P4: 1 → 2 → 3 → 4 → 6 → 3 → 4 → 5 → 7 → 8 → 10</div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- MODALS                                                    -->
+<!-- ========================================================= -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeAllModals()"></div>
+
+<!-- Patient Modal -->
+<div class="modal" id="patientModal">
+  <div class="modal-header">
+    <h3><i class="fas fa-user-plus"></i> Register Patient</h3>
+    <button type="button" onclick="closeAllModals()"><i class="fas fa-times"></i></button>
+  </div>
+  <form id="patientRegisterForm" onsubmit="addPatient(event)">
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Patient ID <small style="color:var(--primary); font-weight:normal;">(Auto-generated if empty)</small></label>
+          <input type="text" id="pID" placeholder="e.g. P1005" />
+        </div>
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="pName" placeholder="Full name" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Age *</label>
+          <input type="number" id="pAge" placeholder="Age" min="1" max="120" required />
+        </div>
+        <div class="form-group">
+          <label>Gender *</label>
+          <select id="pGender" required>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Contact No. *</label>
+          <input type="tel" id="pContact" placeholder="10-digit mobile number" required />
+        </div>
+        <div class="form-group">
+          <label>Address</label>
+          <input type="text" id="pAddress" placeholder="City / Street address" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Previous Medical Diagnosis / History</label>
+        <input type="text" id="pHistory" placeholder="e.g. Hypertension, Diabetes, No known allergies" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Register Patient</button>
+    </div>
+  </form>
+</div>
+
+<!-- Lab Test Modal -->
+<div class="modal" id="labModal">
+  <div class="modal-header">
+    <h3><i class="fas fa-vial"></i> Book Laboratory Test</h3>
+    <button onclick="closeAllModals()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="form-group"><label>Schedule ID</label><input type="text" id="lID" placeholder="SCH005" /></div>
+      <div class="form-group"><label>Patient ID</label><input type="text" id="lPatientID" placeholder="P1001" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Test Name</label>
+        <select id="lTestName">
+          <option>CBC (Complete Blood Count)</option>
+          <option>LFT (Liver Function Test)</option>
+          <option>Blood Sugar Fasting</option>
+          <option>Thyroid Profile (T3, T4, TSH)</option>
+          <option>Lipid Profile</option>
+          <option>Urine Routine Examination</option>
+          <option>Chest X-Ray</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Date</label><input type="date" id="lDate" /></div>
+    </div>
+    <div class="form-group"><label>Assigned Technician</label><input type="text" id="lTech" value="Raushni Kumari (TECH01)" /></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+    <button class="btn btn-primary" onclick="addLabTest()">Book Test</button>
+  </div>
+</div>
+
+<!-- Prescription Modal -->
+<div class="modal" id="rxModal">
+  <div class="modal-header">
+    <h3><i class="fas fa-prescription"></i> Create Prescription</h3>
+    <button onclick="closeAllModals()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="form-group"><label>Prescription ID</label><input type="text" id="rxID" placeholder="PR105" /></div>
+      <div class="form-group"><label>Patient ID</label><input type="text" id="rxPatient" placeholder="P1001" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Doctor</label><input type="text" id="rxDoctor" value="Dr. Shristi Singh" /></div>
+      <div class="form-group"><label>Medicine</label><input type="text" id="rxMedicine" placeholder="Amoxicillin 500 mg" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Dosage</label><input type="text" id="rxDosage" value="1-0-1" /></div>
+      <div class="form-group"><label>Duration</label><input type="text" id="rxDuration" value="5 days" /></div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+    <button class="btn btn-primary" onclick="addPrescription()">Save Prescription</button>
+  </div>
+</div>
+
+<!-- Bill Modal -->
+<div class="modal" id="billModal">
+  <div class="modal-header">
+    <h3><i class="fas fa-file-invoice-dollar"></i> Generate Patient Bill</h3>
+    <button onclick="closeAllModals()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="form-group"><label>Bill ID</label><input type="text" id="bID" placeholder="BILL005" /></div>
+      <div class="form-group"><label>Patient ID</label><input type="text" id="bPatient" placeholder="P1001" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Service Type</label>
+        <select id="bService"><option>Lab Diagnostic Test</option><option>Pharmacy Medicines</option><option>Consultation &amp; Lab</option></select>
+      </div>
+      <div class="form-group"><label>Subtotal (₹)</label><input type="number" id="bAmount" placeholder="500" oninput="calcBill()" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Tax (%)</label><input type="number" id="bTax" value="18" oninput="calcBill()" /></div>
+      <div class="form-group"><label>Discount (%)</label><input type="number" id="bDiscount" value="0" oninput="calcBill()" /></div>
+    </div>
+    <div class="total-display"><label>Total Amount Due</label><div class="total-val" id="bTotal">₹0.00</div></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+    <button class="btn btn-primary" onclick="addBill()">Issue Bill</button>
+  </div>
+</div>
+
+<!-- Stock Modal -->
+<div class="modal" id="stockModal">
+  <div class="modal-header">
+    <h3><i class="fas fa-plus"></i> Add New Medicine to Stock</h3>
+    <button onclick="closeAllModals()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="form-group"><label>Medicine ID</label><input type="text" id="medID" placeholder="MED007" /></div>
+      <div class="form-group"><label>Medicine Name</label><input type="text" id="medName" placeholder="e.g. Ciprofloxacin 500mg" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Available Units</label><input type="number" id="medQty" value="100" /></div>
+      <div class="form-group"><label>Reorder Level</label><input type="number" id="medReorder" value="30" /></div>
+    </div>
+    <div class="form-group"><label>Unit Price (₹)</label><input type="number" id="medPrice" value="12.50" /></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+    <button class="btn btn-primary" onclick="addMedicineStock()">Add to Inventory</button>
+  </div>
+</div>
+
+<!-- User Modal (Admin) -->
+<div class="modal" id="userModal">
+  <div class="modal-header">
+    <h3><i class="fas fa-user-plus"></i> Add Hospital Staff</h3>
+    <button onclick="closeAllModals()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="form-group"><label>Staff Name</label><input type="text" id="usrName" placeholder="Staff Name" /></div>
+      <div class="form-group"><label>Username</label><input type="text" id="usrUsername" placeholder="username" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Password</label><input type="password" id="usrPassword" placeholder="password" /></div>
+      <div class="form-group"><label>Role</label>
+        <select id="usrRole">
+          <option value="doctor">Doctor</option>
+          <option value="lab">Lab Technician</option>
+          <option value="pharmacist">Pharmacist</option>
+          <option value="admin">Administrator</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeAllModals()">Cancel</button>
+    <button class="btn btn-primary" onclick="addStaffAccount()">Create Staff Account</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
